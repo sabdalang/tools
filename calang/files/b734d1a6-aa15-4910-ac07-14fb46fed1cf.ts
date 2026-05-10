@@ -1,1 +1,0 @@
-export default "F:/work/00-oss/sabdalang/istana/sumber/calang/main.zig";
