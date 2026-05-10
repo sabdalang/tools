@@ -1,0 +1,7 @@
+{
+  "name": "@sabdalang/tools",
+  "type": "module",
+  "dependencies": {
+    "uniast": "github:bolawijen/uniast.ts"
+  }
+}
