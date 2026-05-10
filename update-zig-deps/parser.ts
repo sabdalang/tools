@@ -8,9 +8,7 @@
  * or undefined to stay in the same state.
  */
 
-import { Parser } from 'uniast';
-import * as basic from 'uniast/basic';
-import * as blocks from 'uniast/blocks';
+import { Parser, basic, blocks } from 'uniast';
 
 export interface ZonDep {
   name: string;
