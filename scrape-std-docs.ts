@@ -17,7 +17,7 @@ async function scrape(targetApi: string, headed: boolean) {
   await mkdir(CACHE_DIR, { recursive: true });
 
   const url = `${BASE_URL}#${targetApi}`;
-  console.log(`Mengakses: ${url}`);
+
   try {
     await page.goto(url, { waitUntil: 'networkidle' });
   } catch (e) {
@@ -41,18 +41,13 @@ async function scrape(targetApi: string, headed: boolean) {
         console.log(`Peringatan: Menunggu elemen timeout.`);
     }
 
-    const content = await page.evaluate((api) => {
-        const id = api.replace(/\./g, '-');
-        const el = document.getElementById(id) || document.getElementById('tldDocs') || document.body;
-        return el ? el.innerText : "";
+    const data = await page.evaluate((api) => {
+        return document.getElementById('tldDocs').innerText
     }, targetApi);
-    
-    console.log(`Konten yang diekstrak (${content.length} karakter).`);
-    const filename = `${targetApi.replace(/\./g, '-')}.md`;
-    await writeFile(join(CACHE_DIR, filename), `# ${targetApi}\n\n${content}`);
-    console.log(`Cache disimpan untuk ${targetApi}.`);
+
+    process.stdout.write(`# ${targetApi}\n\n${data}`);
   } else {
-    console.log(`API ${targetApi} tidak ditemukan di halaman.`);
+    process.stderr.write(`API ${targetApi} tidak ditemukan di halaman.\n`);
   }
 
   await browser.close();

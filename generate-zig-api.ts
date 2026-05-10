@@ -22,6 +22,10 @@ function walk(dir: string): string[] {
     return results;
 }
 
+function isUnterminatedParens(line) {
+    return (line.slice(4, 6) === 'fn') && line.endsWith('(')
+}
+
 function generate() {
     for (const target of TARGETS) {
         if (!existsSync(target.path)) {
@@ -58,24 +62,35 @@ function generate() {
             const lines = content.split('\n');
             const apis = new Set<string>();
 
-            const patterns = [
-                /pub\s+fn\s+([a-zA-Z0-9_]+)/g,
-                /pub\s+const\s+([a-zA-Z0-9_]+)\s*=/g,
-                /pub\s+var\s+([a-zA-Z0-9_]+)\s*:/g,
-                /pub\s+(?:struct|enum|union|error)\s+([a-zA-Z0-9_]+)/g,
-                /pub\s+const\s+([a-zA-Z0-9_]+)\s*:/g
-            ];
+            let fnDef = ''
 
             for (const line of lines) {
                 const trimmed = line.trim();
                 if (trimmed.startsWith('//')) continue;
 
-                for (const pattern of patterns) {
-                    let match;
-                    pattern.lastIndex = 0;
-                    while ((match = pattern.exec(trimmed)) !== null) {
-                        if (match[1]) apis.add(match[1]);
+                if (fnDef) {
+                    if (trimmed.startsWith(')')) {
+                        apis.add(fnDef.slice(0, -2) + trimmed.slice(0, -1).trimEnd());
+                        // console.debug({
+                        //     namespace,
+                        //     'multiline args': fnDef.slice(0, -1) + trimmed.slice(0, -1).trimEnd()
+                        // })
+                        fnDef = ''
+                        continue
                     }
+
+                    fnDef += trimmed + ' ';
+                    // fnDef += '\n    ' + trimmed
+                    // console.debug('multiline args fn:', fnDef + trimmed)
+                    continue
+                }
+
+                if (line.startsWith('pub ')) {
+                    if (isUnterminatedParens(trimmed)) {
+                        fnDef = trimmed.slice(4)
+                        continue
+                    }
+                    apis.add(trimmed.slice(4, -2));
                 }
             }
 
