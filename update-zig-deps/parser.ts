@@ -10,6 +10,7 @@
 
 import { Parser } from '../../uniast.ts/index.ts';
 import * as basic from '../../uniast.ts/basic.ts';
+import * as blocks from '../../uniast.ts/blocks.ts';
 
 export interface ZonDep {
   name: string;
@@ -62,14 +63,14 @@ export function parse(source: string): ZonRoot {
     if (parser.index >= parser.source.length) return undefined;
 
     if (parser.peek() === ',') { parser.index++; return undefined; }
-    if (parser.peek() === '}') {
-      parser.index++;
+    if (blocks.matchClose(parser)) {
+      blocks.eatCloseCurly(parser);
       // Close current dep if we were tracking one
       if (ctx.dep?.name && ctx.dep.url && ctx.dep.hash) {
         ctx.root.dependencies.push(ctx.dep);
       }
       ctx.dep = null;
-      if (ctx.inDeps) return undefined; // stay in parseObject for next dep
+      if (ctx.inDeps) return undefined;
       return skipToDeps;
     }
 
@@ -132,8 +133,8 @@ export function parse(source: string): ZonRoot {
       // After value: check for comma, close, or end of block
       basic.allowWhitespace(parser);
       if (parser.peek() === ',') { parser.index++; return parseObject; }
-      if (parser.peek() === '}') {
-        parser.index++;
+      if (blocks.matchClose(parser)) {
+        blocks.eatCloseCurly(parser);
         if (ctx.dep?.url && ctx.dep?.hash) {
           ctx.root.dependencies.push(ctx.dep);
         }
